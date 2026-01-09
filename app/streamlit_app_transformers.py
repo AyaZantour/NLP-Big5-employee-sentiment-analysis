@@ -214,8 +214,10 @@ model = load_model()
 
 def load_groq_analyzer():
     try:
-        analyzer = PersonalityAnalyzer(api_key=st.secrets["GROQ_API_KEY"])
-        st.success("✅ Personality analyzer loaded (Groq)")
+        analyzer = PersonalityAnalyzer(
+            api_key=st.secrets["GROQ_API_KEY"]
+        )
+        st.success("✅ Personality analyzer loaded (Groq REST)")
         return analyzer
     except Exception as e:
         st.error(f"❌ Groq init failed: {e}")

@@ -1,35 +1,48 @@
 import os
 import json
-from groq import Groq
+import requests
 
 class PersonalityAnalyzer:
     def __init__(self, api_key: str):
         if not api_key:
             raise ValueError("GROQ_API_KEY is missing")
 
-        # 🚨 FIX STREAMLIT CLOUD PROXY ISSUE
-        for var in ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"]:
-            os.environ.pop(var, None)
-
-        self.client = Groq(api_key=api_key)
+        self.api_key = api_key
         self.model = "llama3-8b-8192"
+        self.url = "https://api.groq.com/openai/v1/chat/completions"
 
-        # 🔍 Test API key
-        try:
-            res = self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": "Say OK"}],
-                max_tokens=5
-            )
-            print("✅ Groq API OK")
-        except Exception as e:
-            raise RuntimeError(f"Groq API test failed: {e}")
+        # 🔍 quick test
+        self._test_api()
+
+    def _test_api(self):
+        payload = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": "Say OK"}],
+            "max_tokens": 5
+        }
+
+        r = requests.post(
+            self.url,
+            headers=self._headers(),
+            json=payload,
+            timeout=20
+        )
+
+        if r.status_code != 200:
+            raise RuntimeError(f"Groq API test failed: {r.text}")
+
+        print("✅ Groq REST API OK")
+
+    def _headers(self):
+        return {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
 
     def analyze(self, text: str):
         prompt = f"""
 Return ONLY valid JSON.
 Numbers between 0.0 and 1.0.
-NO explanation.
 
 TEXT:
 \"\"\"{text}\"\"\"
@@ -44,18 +57,26 @@ FORMAT:
 }}
 """
 
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": "You are a psychologist."},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.3,
+            "max_tokens": 150
+        }
+
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are a psychologist."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.2,
-                max_tokens=120
+            r = requests.post(
+                self.url,
+                headers=self._headers(),
+                json=payload,
+                timeout=30
             )
 
-            raw = response.choices[0].message.content.strip()
+            r.raise_for_status()
+            raw = r.json()["choices"][0]["message"]["content"].strip()
             scores = json.loads(raw)
 
             return {
@@ -64,7 +85,7 @@ FORMAT:
             }
 
         except Exception as e:
-            print(f"❌ Groq error: {e}")
+            print("❌ Groq error:", e)
             return {
                 "scores": {
                     "Extraversion": 0.5,
