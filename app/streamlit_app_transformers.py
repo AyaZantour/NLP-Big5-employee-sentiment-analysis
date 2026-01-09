@@ -284,33 +284,39 @@ if st.button("🚀 Analyser le sentiment", type="primary") and review_text:
         with st.spinner("🔮 Analyse en cours..."):
             # Predict
             prediction, probabilities = model.predict(review_text)
-            
+            probabilities = np.array(probabilities).flatten()
+
             # Labels
             sentiment_labels = {0: "Négatif 😠", 1: "Neutre 😐", 2: "Positif 😊"}
             sentiment_emojis = {0: "😠", 1: "😐", 2: "😊"}
-            sentiment_colors = {0: "#FF6B6B", 1: "#FFD166", 2: "#06D6A0"}
-            
+            sentiment_colors = {
+                "Négatif": "#FF6B6B",
+                "Neutre": "#FFD166",
+                "Positif": "#06D6A0"
+            }
+
+            sentiment_clean = ["Négatif", "Neutre", "Positif"][prediction]
             sentiment = sentiment_labels[prediction]
             emoji = sentiment_emojis[prediction]
-            color = sentiment_colors[prediction]
-            
+            color = sentiment_colors[sentiment_clean]
+
             # Display results
             st.markdown("---")
-            
+
             # Main result
             col_a, col_b, col_c = st.columns(3)
+
             with col_a:
                 st.markdown(f"### {emoji}")
                 st.markdown(f"### {sentiment}")
                 st.markdown(f"**Confiance:** {probabilities[prediction]*100:.1f}%")
-            
+
             with col_b:
                 # Gauge
                 fig = go.Figure(go.Indicator(
                     mode="gauge+number",
-                    value=probabilities[prediction]*100,
+                    value=probabilities[prediction] * 100,
                     title={'text': "Confiance"},
-                    domain={'x': [0, 1], 'y': [0, 1]},
                     gauge={
                         'axis': {'range': [0, 100]},
                         'bar': {'color': color},
@@ -323,38 +329,46 @@ if st.button("🚀 Analyser le sentiment", type="primary") and review_text:
                 ))
                 fig.update_layout(height=200, margin=dict(l=10, r=10, t=50, b=10))
                 st.plotly_chart(fig, use_container_width=True)
-            
+
             with col_c:
-                # Detailed scores
                 st.markdown("### 📊 Scores détaillés")
-                for i, (label, prob) in enumerate(zip(["Négatif", "Neutre", "Positif"], probabilities)):
-                    progress = int(prob * 100)
-                    st.markdown(f"**{label}:** {progress}%")
-                    st.progress(progress / 100)
-            
-            # Bar chart
+                for label, prob in zip(["Négatif", "Neutre", "Positif"], probabilities):
+                    st.markdown(f"**{label}:** {prob*100:.1f}%")
+                    st.progress(float(prob))
+
+            # ================= FIXED BAR CHART =================
             st.markdown("### 📈 Distribution des scores")
+
+            import pandas as pd
+
+            df_scores = pd.DataFrame({
+                "Sentiment": ["Négatif", "Neutre", "Positif"],
+                "Probabilité (%)": probabilities * 100
+            })
+
             fig_bar = px.bar(
-                x=["Négatif", "Neutre", "Positif"],
-                y=probabilities * 100,
-                color=["Négatif", "Neutre", "Positif"],
-                color_discrete_map={"Négatif": "#FF6B6B", "Neutre": "#FFD166", "Positif": "#06D6A0"},
-                labels={"x": "Sentiment", "y": "Probabilité (%)"},
-                text=[f"{p*100:.1f}%" for p in probabilities]
+                df_scores,
+                x="Sentiment",
+                y="Probabilité (%)",
+                color="Sentiment",
+                text=df_scores["Probabilité (%)"].apply(lambda x: f"{x:.1f}%"),
+                color_discrete_map=sentiment_colors
             )
-            fig_bar.update_traces(textposition='outside')
-            fig_bar.update_layout(showlegend=False)
+
+            fig_bar.update_traces(textposition="outside")
+            fig_bar.update_layout(showlegend=False, yaxis_range=[0, 100])
+
             st.plotly_chart(fig_bar, use_container_width=True)
-            
+
             # Details
             with st.expander("📋 Détails de l'analyse"):
-                st.markdown(f"**Avis analysé:**")
+                st.markdown("**Avis analysé:**")
                 st.info(review_text)
                 st.markdown(f"**Longueur:** {len(review_text)} caractères")
                 st.markdown(f"**Mots:** {len(review_text.split())} mots")
-    else:
-        st.error("Modèle non chargé. Vérifiez les fichiers du modèle.")
 
+    else:
+        st.error("❌ Modèle non chargé. Vérifiez la configuration.")
 
 # ========== AFTER SENTIMENT RESULTS ==========
 
