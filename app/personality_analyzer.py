@@ -8,7 +8,7 @@ class PersonalityAnalyzer:
             raise ValueError("GROQ_API_KEY is missing")
 
         self.api_key = api_key
-        self.model = "llama3-8b-8192"
+        self.model = "llama-3.3-70b-versatile"
         self.url = "https://api.groq.com/openai/v1/chat/completions"
 
         # 🔍 quick test
