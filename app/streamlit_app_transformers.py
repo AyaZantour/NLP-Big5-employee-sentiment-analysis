@@ -95,7 +95,6 @@ class TransformersPipeline:
 
 
 # # Load model
-model = load_model()
 
 
 
@@ -135,7 +134,7 @@ def load_model():
     except Exception as e:
         st.error(f"❌ Error: {e}")
         return None
-
+model = load_model()
 
 
 
