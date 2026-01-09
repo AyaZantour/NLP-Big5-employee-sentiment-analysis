@@ -95,7 +95,7 @@ class TransformersPipeline:
 
 
 # # Load model
- model = load_model()
+model = load_model()
 
 
 

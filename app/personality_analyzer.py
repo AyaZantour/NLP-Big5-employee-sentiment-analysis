@@ -104,6 +104,10 @@
 
 # app/personality_analyzer.py - FIXED VERSION
 import os
+# Disable proxy variables injected by Streamlit Cloud
+for var in ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"]:
+    os.environ.pop(var, None)
+
 from groq import Groq
 import json
 import streamlit as st
