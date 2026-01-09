@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Environment
+.env
+venv/
+env/
+glassdoor_env/
+
+# Large Files - NEVER COMMIT THESE!
+data/              
+models/            
+hf_model/          
+*.safetensors      
+*.pkl             
+*.csv              
+*.xlsx             
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
