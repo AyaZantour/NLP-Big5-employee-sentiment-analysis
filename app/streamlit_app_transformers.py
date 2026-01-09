@@ -144,21 +144,68 @@ def load_model():
 
 
 
-# Load personality model (separate from sentiment model!)
+# # Load personality model (separate from sentiment model!)
+# def load_groq_analyzer():
+#     try:
+#         analyzer = PersonalityAnalyzer()
+#         st.success("✅ Analyseur de personnalité Groq chargé!")
+#         return analyzer
+#     except Exception as e:
+#         st.error(f"❌ Erreur Groq: {e}")
+#         st.info("""
+#         🔧 Configuration requise:
+#         1. Créez un compte gratuit sur console.groq.com
+#         2. Obtenez votre clé API
+#         3. Créez un fichier `.env` avec: GROQ_API_KEY=votre_clé
+#         """)
+#         return None
+
+
+
+
 def load_groq_analyzer():
     try:
-        analyzer = PersonalityAnalyzer()
-        st.success("✅ Analyseur de personnalité Groq chargé!")
+        # FIRST try Streamlit Cloud secrets (for production)
+        if 'GROQ_API_KEY' in st.secrets:
+            api_key = st.secrets['GROQ_API_KEY']
+            st.success("✅ Using API key from Streamlit Cloud secrets")
+        
+        # FALLBACK to .env file (for local development)
+        else:
+            from dotenv import load_dotenv
+            import os
+            load_dotenv()
+            api_key = os.getenv('GROQ_API_KEY')
+            if api_key:
+                st.success("✅ Using API key from .env file")
+            else:
+                st.warning("⚠️ No API key found in secrets or .env")
+                st.info("""
+                🔧 Configuration required:
+                1. For local: Create `.env` with GROQ_API_KEY=your_key
+                2. For Streamlit Cloud: Add GROQ_API_KEY in Settings → Secrets
+                """)
+                return None
+        
+        # Initialize analyzer with the API key
+        # Check if PersonalityAnalyzer accepts api_key parameter
+        try:
+            analyzer = PersonalityAnalyzer(api_key=api_key)
+        except TypeError:
+            # If constructor doesn't accept api_key, try setting it differently
+            analyzer = PersonalityAnalyzer()
+            # Or check personality_analyzer.py for how it expects the key
+        
+        st.success("✅ Personality analyzer Groq loaded!")
         return analyzer
+        
     except Exception as e:
-        st.error(f"❌ Erreur Groq: {e}")
-        st.info("""
-        🔧 Configuration requise:
-        1. Créez un compte gratuit sur console.groq.com
-        2. Obtenez votre clé API
-        3. Créez un fichier `.env` avec: GROQ_API_KEY=votre_clé
-        """)
+        st.error(f"❌ Groq error: {e}")
         return None
+
+
+
+
 
 groq_analyzer = load_groq_analyzer()
 # ============================================
