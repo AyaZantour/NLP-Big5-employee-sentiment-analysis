@@ -110,7 +110,7 @@ def load_model():
         # Your HuggingFace model
         from transformers import pipeline
         
-        MODEL_ID = "AyaZantour/employee-sentiment-model"
+        MODEL_ID = "Eyazntr/employee-sentiment-model"
         st.write(f"Loading model: {MODEL_ID}")
         
         # Load from HuggingFace
