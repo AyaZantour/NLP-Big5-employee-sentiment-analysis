@@ -2,13 +2,25 @@ import json
 from groq import Groq
 
 class PersonalityAnalyzer:
+    # Test your API key in personality_analyzer.py __init__
     def __init__(self, api_key: str):
         if not api_key:
             raise ValueError("GROQ_API_KEY is missing")
-
+    
+        # Test the API key by making a small request
         self.client = Groq(api_key=api_key)
-        self.model = "llama3-8b-8192"  # ✅ MOST STABLE FOR JSON
-
+        self.model = "llama3-8b-8192"
+    
+        # Quick test
+        try:
+            test_response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": "Say 'TEST OK'"}],
+                max_tokens=10
+            )
+            print(f"✅ Groq API test passed: {test_response.choices[0].message.content}")
+        except Exception as e:
+            print(f"❌ Groq API test failed: {e}")
     def analyze(self, text: str):
         prompt = f"""
 You MUST return ONLY valid JSON.
