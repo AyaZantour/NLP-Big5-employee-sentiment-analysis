@@ -110,23 +110,32 @@ for var in ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"]:
 
 from groq import Groq
 import json
-import streamlit as st
+# import streamlit as st
+
+# class PersonalityAnalyzer:
+#     """Big Five Personality Analyzer using Groq API"""
+    
+#     def __init__(self, api_key=None):
+#         # Get API key from Streamlit secrets or environment
+#         self.api_key = api_key or st.secrets.get("GROQ_API_KEY") or os.getenv('GROQ_API_KEY')
+        
+#         if not self.api_key:
+#             raise ValueError("GROQ_API_KEY not found. Please set it in .streamlit/secrets.toml or .env")
+        
+#         # Initialize Groq client
+#         self.client = Groq(api_key=self.api_key)
+        
+#         # Use a more capable model
+#         self.model = "llama-3.3-70b-versatile"  # Better than 8b for analysis
 
 class PersonalityAnalyzer:
-    """Big Five Personality Analyzer using Groq API"""
-    
-    def __init__(self, api_key=None):
-        # Get API key from Streamlit secrets or environment
-        self.api_key = api_key or st.secrets.get("GROQ_API_KEY") or os.getenv('GROQ_API_KEY')
-        
-        if not self.api_key:
-            raise ValueError("GROQ_API_KEY not found. Please set it in .streamlit/secrets.toml or .env")
-        
-        # Initialize Groq client
-        self.client = Groq(api_key=self.api_key)
-        
-        # Use a more capable model
-        self.model = "llama-3.3-70b-versatile"  # Better than 8b for analysis
+    def __init__(self, api_key):
+        if not api_key:
+            raise ValueError("GROQ_API_KEY is required")
+
+        self.client = Groq(api_key=api_key)
+        self.model = "llama-3.3-70b-versatile"
+
     
     def analyze(self, text):
         """Analyze text and return Big Five personality scores"""
