@@ -104,7 +104,12 @@
 
 # app/personality_analyzer.py - FIXED VERSION
 import os
-from groq import Groq
+# from groq import Groq
+try:
+    from groq import Groq
+except ImportError:
+    # For newer groq versions
+    from groq.client import Groq
 import json
 import streamlit as st
 
