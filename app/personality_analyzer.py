@@ -97,3 +97,85 @@ FORMAT:
                 "model_used": self.model,
                 "analysis": "Fallback due to Groq error"
             }
+    def generate_recommendations(
+    self,
+    review_text: str,
+    sentiment: int,
+    sentiment_confidence: float,
+    personality_scores: dict
+):
+        sentiment_map = {0: "Négatif", 1: "Neutre", 2: "Positif"}
+
+        prompt = f"""
+    You are an HR expert and organizational psychologist.
+
+    Based on:
+    1) An employee review
+    2) Sentiment analysis result
+    3) Big Five personality scores
+
+Generate ACTIONABLE and PRIORITIZED professional recommendations.
+
+Return ONLY valid JSON.
+NO markdown.
+NO explanations outside JSON.
+
+REVIEW:
+\"\"\"{review_text}\"\"\"
+
+SENTIMENT:
+- Type: {sentiment_map.get(sentiment, "Neutre")}
+- Confidence: {sentiment_confidence:.2f}
+
+BIG FIVE SCORES:
+{json.dumps(personality_scores, indent=2)}
+
+FORMAT:
+[
+  {{
+    "icon": "🧠",
+    "title": "Short title",
+    "action": "Concrete action to take",
+    "details": "Why this matters",
+    "priority": "URGENT | HAUTE | MOYENNE | BASSE",
+    "timeline": "Court terme | Moyen terme | Long terme"
+  }}
+]
+"""
+
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": "You are a senior HR consultant."},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.4,
+            "max_tokens": 500
+        }
+
+        try:
+            r = requests.post(
+                self.url,
+                headers=self._headers(),
+                json=payload,
+                timeout=40
+            )
+
+            r.raise_for_status()
+            raw = r.json()["choices"][0]["message"]["content"].strip()
+            recommendations = json.loads(raw)
+
+            return recommendations
+
+        except Exception as e:
+            print("❌ Recommendation error:", e)
+            return [
+                {
+                    "icon": "⚠️",
+                    "title": "Analyse complémentaire recommandée",
+                    "action": "Discuter avec un manager ou RH pour clarifier la situation",
+                    "details": "Les signaux détectés nécessitent une analyse humaine",
+                    "priority": "MOYENNE",
+                    "timeline": "Court terme"
+                }
+            ]
